@@ -17,8 +17,8 @@ const DEFAULT_VERTEX_COLOR = [1.0, 0.0, 1.0, 1.0, 0.0]
 let vertex_color_property
 
 // Old versions of monkey patched functions
-let old_mesh_face_extend
-let old_meshFace_getSaveCopy
+let old_MeshFace_extend
+let old_MeshFace_getSaveCopy
 
 Plugin.register('vertex_colors', {
     title: 'Vertex Colors',
@@ -50,9 +50,9 @@ Plugin.register('vertex_colors', {
         // MeshFace.extend updates the uv coordinates to match any changes in the vertices
         // We need to also update the vertex colors in the same way
         // The MeshFace constructor also uses this, to reduce code duplication (nice)
-        old_mesh_face_extend = MeshFace.prototype.extend;
+        old_MeshFace_extend = MeshFace.prototype.extend;
         MeshFace.prototype.extend = function(data) {
-            let old_return = old_mesh_face_extend.bind(this, data)()
+            let old_return = old_MeshFace_extend.bind(this, data)()
             if(old_return !== this) {
                 console.warn("[Vertex_colors]: Return value of MeshFace.extend() was unexpected. This indicates a change in Blockbench that may effect vertex colors!")
             }
@@ -80,17 +80,17 @@ Plugin.register('vertex_colors', {
         }
 
         // Same deal with getSaveCopy, need to make sure the copy also gets the vertex color data
-        old_meshFace_getSaveCopy = MeshFace.prototype.getSaveCopy;
+        old_MeshFace_getSaveCopy = MeshFace.prototype.getSaveCopy;
         MeshFace.prototype.getSaveCopy = function(nested) {
-            let copy = old_meshFace_getSaveCopy.bind(this, nested)()
+            let copy = old_MeshFace_getSaveCopy.bind(this, nested)()
             copy[VERTEX_COLOR_DATA_NAME] = structuredClone(this[VERTEX_COLOR_DATA_NAME])
             return copy;
         }
     },
     onunload() {
         // Reset all the monkey patches
-        MeshFace.prototype.extend = old_mesh_face_extend;
-        MeshFace.prototype.getSaveCopy = old_meshFace_getSaveCopy;
+        MeshFace.prototype.extend = old_MeshFace_extend;
+        MeshFace.prototype.getSaveCopy = old_MeshFace_getSaveCopy;
         vertex_color_property.delete()
     }
 });
