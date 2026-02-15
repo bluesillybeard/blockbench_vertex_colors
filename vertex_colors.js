@@ -1,4 +1,14 @@
-let button;
+let vertex_color_property;
+
+function onaddmesh() {
+    console.log("The user added a mesh");
+    Mesh.all.forEach(m => {
+        m.forAllFaces((face, key) => {
+            console.log("Face " + key + " had vertex colors " + face["data_vertex_colors"]);
+            face["data_vertex_colors"] = "hello";
+        })
+    })
+}
 
 Plugin.register('vertex_colors', {
     title: 'Vertex Colors',
@@ -10,16 +20,23 @@ Plugin.register('vertex_colors', {
     await_loading: 'true',
     onload() {
         console.log("Hello I am a vertex plugin");
-        button = new Action('vertex_colors', {
-            name: 'say hello',
-            description: 'this button says hello',
-            click: function() {
-                console.log("Hello, vertex colors here! I was edited.");
-            }
+        vertex_color_property = new Property(Face, "string", "data_vertex_colors", {
+            default: "hi",
+            merge: (instance, data) => {
+                instance["data_vertex_colors"] = structuredClone(data["data_vertex_colors"])
+                console.log("vertex color merged")
+            },
+            copy_value: (instance, target) => {
+                target["data_vertex_colors"] = structuredClone(instance["data_vertex_colors"])
+                console.log("vertex color copied")
+            },
+            export: true
         });
-        MenuBar.addAction(button, 'filter');
+
+        Blockbench.on('add_mesh', onaddmesh);
     },
     onunload() {
-        button.delete();
+        vertex_color_property.delete();
+        Blockbench.removeListener('add_mesh', onaddmesh);
     }
 });
